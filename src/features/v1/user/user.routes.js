@@ -6,6 +6,10 @@ const userRouter = express.Router();
 const userController = new UserController();
 
 userRouter.post('/signup',(req,res)=>{userController.signUp(req,res)});
+userRouter.post("/signin",(req,res)=>{userController.signIn(req,res)});
+
+userRouter.get("/me",jwtAuth,(req,res)=>{userController.getMyDetail(req,res)});
+
 
 
 

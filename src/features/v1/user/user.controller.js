@@ -1,6 +1,7 @@
 
 import UserRepository from './user.repository.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export default class UserController{
 
@@ -41,9 +42,9 @@ export default class UserController{
             }
 
             const hashedPassword = await bcrypt.hash(password,12);
-            const data =  await this.userRepository.signUp(name,email,hashedPassword);
+            const newUser =  await this.userRepository.signUp(name,email,hashedPassword);
 
-            if(!data){
+            if(!newUser){
 
                 errors.push({
                     "param": "email",
@@ -58,12 +59,23 @@ export default class UserController{
                
             }
 
+            const token = jwt.sign({userID:newUser._id,email:newUser.email},process.env.JWT_SECRET,{
+                expiresIn:'1h',
+            });
+
             return res.status(200).send({
                 "status":true,
                 "content":{
-                    "data" : data,
+                    "data" : {
+
+                        "id": newUser._id,
+                        "name": newUser.name,
+                        "email": newUser.email,
+                        "created_at": newUser.createdAt
+                        
+                    },
                     "meta":{
-                        "access_token": ""
+                        "access_token": token
                     }
                 }
             })
@@ -72,6 +84,105 @@ export default class UserController{
             console.log("error in signup :::",err);
             return res.status(500).send("Something went wrong");
         }
+    }
+
+    async signIn(req,res,next){
+        const {email,password} = req.body;
+
+        try{
+
+            const user = await this.userRepository.findByEmail(email);
+            console.log(user);
+            if(!user){
+                return res.status(400).send({
+                    "status": false,
+                    "errors": [
+                      {
+                        "param": "email",
+                        "message": "Please provide a valid email address.",
+                        "code": "INVALID_INPUT"
+                      }
+                    ]
+                  });
+            }else{
+
+                const result = await bcrypt.compare(password,user.password);
+
+                if(result){
+                    const token = jwt.sign({userID:user._id,email:user.email},process.env.JWT_SECRET,{
+                        expiresIn:'1h'
+                    });
+
+                    return res.status(200).send({
+                        "status":true,
+                        "content":{
+                            "data" : {
+        
+                                "id": user._id,
+                                "name": user.name,
+                                "email": user.email,
+                                "created_at": user.createdAt
+                                
+                            },
+                            "meta":{
+                                "access_token": token
+                            }
+                        }
+                    })
+
+                   
+                }else{
+                    
+                    return res.status(400).send({
+                        "status": false,
+                        "errors": [
+                          {
+                            "param": "password",
+                            "message": "The credentials you provided are invalid.",
+                            "code": "INVALID_CREDENTIALS"
+                          }
+                        ]
+                      });
+                }
+            }
+
+        }catch(err){
+            console.log("error in signin ::::",err);
+            return res.status(500).send("Something went wrong")
+        }
+    }
+
+    async getMyDetail(req,res,next){
+
+        const user = await this.userRepository.findByEmail(req.userEmail);
+
+        if(user){
+            return res.status(200).send({
+                "status": true,
+                "content": {
+                    "data": {
+                        "id": user._id,
+                        "name": user.name,
+                        "email": user.email,
+                        "created_at": user.createdAt
+                    }
+                }
+             })
+
+        }else{
+
+            return res.status(400).send({
+                "status": false,
+                "errors": [
+                  {
+                    "message": "You need to sign in to proceed.",
+                    "code": "NOT_SIGNEDIN"
+                  }
+                ]
+            })
+        }
+
+
     }
 
 }
