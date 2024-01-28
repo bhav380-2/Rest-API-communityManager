@@ -10,7 +10,6 @@ const roleSchema = new mongoose.Schema({
     name:{
         type:String,
         required:true,
-        enum:['Community Admin','Community Member']
     },
 
 },{timestamps:true})

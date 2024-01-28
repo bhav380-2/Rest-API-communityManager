@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import env from '../config/environment.js';
 
 const jwtAuth = (req,res,next)=>{
     //read token
@@ -23,14 +24,11 @@ const jwtAuth = (req,res,next)=>{
     try{
         const payload = jwt.verify(
             token,
-            process.env.JWT_SECRET
+            env.jwt_secret
         );
-        
-       // todo***********************
         req.userId = payload.userID;
-        req.userEmail = payload.email;  //*********to change*************************** */
-        console.log("*O******")
-        console.log(payload);
+        req.userEmail = payload.email;
+        
     }catch(err){
         return res.status(401).send({
             "status": false,

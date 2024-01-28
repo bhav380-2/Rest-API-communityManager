@@ -2,6 +2,7 @@
 import UserRepository from './user.repository.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import env from '../../../config/environment.js';
 
 export default class UserController{
 
@@ -10,10 +11,9 @@ export default class UserController{
     }
 
     async signUp(req,res,next){
-        const {name,email,password} = req.body;
 
         try{
-
+            const {name,email,password} = req.body;
             let errors = [];
 
             if(name.length<2){
@@ -34,7 +34,6 @@ export default class UserController{
             }
 
             if(errors.length>0){
-
                 return res.status(400).send({
                     "status": false,
                     "errors": errors
@@ -45,7 +44,6 @@ export default class UserController{
             const newUser =  await this.userRepository.signUp(name,email,hashedPassword);
 
             if(!newUser){
-
                 errors.push({
                     "param": "email",
                     "message": "User with this email address already exists.",
@@ -56,10 +54,9 @@ export default class UserController{
                     "status": false,
                     "errors": errors
                  })
-               
             }
 
-            const token = jwt.sign({userID:newUser._id,email:newUser.email},process.env.JWT_SECRET,{
+            const token = jwt.sign({userID:newUser._id,email:newUser.email},env.jwt_secret,{
                 expiresIn:'1h',
             });
 
@@ -72,7 +69,6 @@ export default class UserController{
                         "name": newUser.name,
                         "email": newUser.email,
                         "created_at": newUser.createdAt
-                        
                     },
                     "meta":{
                         "access_token": token
@@ -87,9 +83,9 @@ export default class UserController{
     }
 
     async signIn(req,res,next){
-        const {email,password} = req.body;
-
+      
         try{
+            const {email,password} = req.body;
 
             const user = await this.userRepository.findByEmail(email);
             console.log(user);
@@ -109,7 +105,7 @@ export default class UserController{
                 const result = await bcrypt.compare(password,user.password);
 
                 if(result){
-                    const token = jwt.sign({userID:user._id,email:user.email},process.env.JWT_SECRET,{
+                    const token = jwt.sign({userID:user._id,email:user.email},env.jwt_secret,{
                         expiresIn:'1h'
                     });
 
@@ -117,20 +113,16 @@ export default class UserController{
                         "status":true,
                         "content":{
                             "data" : {
-        
                                 "id": user._id,
                                 "name": user.name,
                                 "email": user.email,
                                 "created_at": user.createdAt
-                                
                             },
                             "meta":{
                                 "access_token": token
                             }
                         }
                     })
-
-                   
                 }else{
                     
                     return res.status(400).send({
@@ -154,35 +146,36 @@ export default class UserController{
 
     async getMyDetail(req,res,next){
 
-        const user = await this.userRepository.findByEmail(req.userEmail);
+        try{
+            const user = await this.userRepository.findByEmail(req.userEmail);
 
-        if(user){
-            return res.status(200).send({
-                "status": true,
-                "content": {
-                    "data": {
-                        "id": user._id,
-                        "name": user.name,
-                        "email": user.email,
-                        "created_at": user.createdAt
+            if(user){
+                return res.status(200).send({
+                    "status": true,
+                    "content": {
+                        "data": {
+                            "id": user._id,
+                            "name": user.name,
+                            "email": user.email,
+                            "created_at": user.createdAt
+                        }
                     }
-                }
-             })
-
-        }else{
-
-            return res.status(400).send({
-                "status": false,
-                "errors": [
-                  {
-                    "message": "You need to sign in to proceed.",
-                    "code": "NOT_SIGNEDIN"
-                  }
-                ]
-            })
+                 })
+    
+            }else{
+    
+                return res.status(400).send({
+                    "status": false,
+                    "errors": [
+                      {
+                        "message": "You need to sign in to proceed.",
+                        "code": "NOT_SIGNEDIN"
+                      }
+                    ]
+                })
+            }
+        }catch(err){
+            throw err;
         }
-
-
     }
-
 }

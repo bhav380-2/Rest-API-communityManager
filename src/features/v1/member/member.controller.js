@@ -90,25 +90,28 @@ export default class MemberController {
 
     async deleteMember(req,res){
 
-        const memberId = req.params.id;
+        try{
+            const memberId = req.params.id;
+            console.log(memberId);
 
-        console.log(memberId);
+            const result = await this.memberRepository.deleteMember(memberId,req.userId);
 
-        const result = await this.memberRepository.deleteMember(memberId,req.userId);
+            if(result['status']){
 
-        if(result['status']){
+                return res.status(200).send({
+                    "status":true
+                })
 
-            return res.status(200).send({
-                "status":true
-            })
+            }else{
 
-        }else{
+                return res.status(400).send({
+                    "status":false,
+                    "errors":error(result['message'])
+                })
+            }
 
-            return res.status(400).send({
-                "status":false,
-                "errors":error(result['message'])
-            })
-
+        }catch(err){
+            return res.status(500).send("something went wrong");
         }
     }
 }

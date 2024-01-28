@@ -3,27 +3,33 @@ import { Snowflake } from "@theinternetfolks/snowflake"
 import _ from 'lodash';
 import Role from "./role.schema.js"
 
-
-
 export default class RoleRepository{
 
     async addRole(roleName){
 
-        const newRole = await Role.create({
-            _id : Snowflake.generate(Date.now()),
-            name:roleName
-        })
+        try{
 
-        return newRole;
+            const newRole = await Role.create({
+                _id : Snowflake.generate(Date.now()),
+                name:roleName
+            })
+    
+            return newRole;
+
+        }catch(err){
+            throw err;
+        }
     }
 
     async getRoles(){
-        let roles = await Role.find({}).select("-__v");
 
-        return roles;
-       
+        try{
 
-        return content;
+            let roles = await Role.find({}).select("-__v");
+            return roles;
 
+        }catch(err){
+            throw err;
+        }
     }
 }

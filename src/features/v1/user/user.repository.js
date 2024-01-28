@@ -6,9 +6,14 @@ export default class UserRepository{
 
     async signUp(name,email,hashedPassword){
         try{
+
+            const userExists = await User.findOne({email:email});
+            
+            if(userExists){
+                return null;
+            }
             const newUser = await User.create({
                 _id:Snowflake.generate(Date.now()),
-                
                 name:name,
                 email:email,
                 password:hashedPassword
@@ -32,9 +37,6 @@ export default class UserRepository{
 
             console.log("Error in finding email :::",err);
             throw err;
-
         }
-
     }
-    
 }

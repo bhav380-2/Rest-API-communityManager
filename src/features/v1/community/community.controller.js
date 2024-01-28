@@ -104,35 +104,36 @@ export default class CommunityController {
 
     async getCommunityMembers(req, res) {
 
-        // console.log(req.params);
+        try{
 
-        const c_id = req.params.id;
+            const c_id = req.params.id;
 
-        let members = await this.communityRepository.getCommunityMembers(c_id);
+            let members = await this.communityRepository.getCommunityMembers(c_id);
+    
+            members = this.updateKeys(members, ['user', 'role']);
+    
+            const total = parseInt(members.length);
+            const pages = parseInt(total / 10) + (total % 10 != 0 ? 1 : 0);
+            const currPage = 1;
+            // console.log(members);
+    
+            return res.status(200).send({
+    
+                "status": true,
+                "content": {
+                    "meta": {
+                        "total": total,
+                        "pages": pages,
+                        "page": currPage
+                    },
+                    "data": members
+                }
+            })
 
-        members = this.updateKeys(members, ['user', 'role']);
-
-        const total = parseInt(members.length);
-        const pages = parseInt(total / 10) + (total % 10 != 0 ? 1 : 0);
-        const currPage = 1;
-        // console.log(members);
-
-        return res.status(200).send({
-
-            "status": true,
-            "content": {
-                "meta": {
-                    "total": total,
-                    "pages": pages,
-                    "page": currPage
-                },
-                "data": members
-            }
-        })
-
-
-
-
+        }catch(err){
+            console.log(err);
+            return res.status(500).send("something went wrong");
+        }
     }
 
     async getMyOwnedCommunities(req, res) {

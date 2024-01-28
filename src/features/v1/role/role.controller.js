@@ -7,45 +7,47 @@ export default class RoleController {
         this.roleRepositiory = new RoleRepository();
     }
 
-
     async addRole(req, res) {
 
-        const { name } = req.body;
+        try{
+            const { name } = req.body;
 
-        if (name.length < 2) {
-
-            return res.status(200).send({
-                "status": false,
-                "errors": [
-                    {
-                        "param": "name",
-                        "message": "Name should be at least 2 characters.",
-                        "code": "INVALID_INPUT"
+            if (name.length < 2) {
+    
+                return res.status(200).send({
+                    "status": false,
+                    "errors": [
+                        {
+                            "param": "name",
+                            "message": "Name should be at least 2 characters.",
+                            "code": "INVALID_INPUT"
+                        }
+                    ]
+                });
+            } else {
+    
+                const newRole = await this.roleRepositiory.addRole(name);
+    
+                return res.status(200).send({
+                    "status": true,
+                    "content": {
+                        "data": {
+                            "id": newRole._id,
+                            "name": newRole.name,
+                            "created_at": newRole.createdAt,
+                            "updated_at": newRole.updatedAt
+                        }
                     }
-                ]
-            });
+                });
+            }
 
-        } else {
-
-            const newRole = await this.roleRepositiory.addRole(name);
-
-            return res.status(200).send({
-                "status": true,
-                "content": {
-                    "data": {
-                        "id": newRole._id,
-                        "name": newRole.name,
-                        "created_at": newRole.createdAt,
-                        "updated_at": newRole.updatedAt
-                    }
-                }
-            });
-
+        }catch(err){
+            console.log(err);
+            return res.status(500).send("something went wrong");
         }
     }
 
     async getRoles(req, res) {
-
 
         try {
 
@@ -54,7 +56,6 @@ export default class RoleController {
             const total = roles.length;
             const pages = parseInt(total / 10) + (total % 10 != 0 ? 1 : 0);
             const currPage = 1;                            //specific page not requested in request (so setting currPage to 1)
-
 
             roles = roles.map((r) => {
                 let newRole = {};
@@ -75,18 +76,13 @@ export default class RoleController {
                         "pages": pages,
                         "page": currPage
                     },
-
                     "data": roles
                 }
             });
 
         } catch (err) {
             console.log(err);
-            return res.status(500).send("Something went wrong");
+            return res.status(500).send("something went wrong");
         }
-
     }
-
-
-
 }
