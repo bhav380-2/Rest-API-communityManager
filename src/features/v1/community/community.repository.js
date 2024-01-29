@@ -47,7 +47,7 @@ export default class CommunityRepository {
     async getCommunityMembers(c_id) {
 
         try {
-            const members = await Member.find({ communtiy: c_id }).populate({ path: 'user', select: '_id name' }).populate({ path: 'role', select: '_id name' }).select('-__v -updatedAt');
+            const members = await Member.find({ community: c_id }).populate({ path: 'user', select: '_id name' }).populate({ path: 'role', select: '_id name' }).select('-__v -updatedAt');
             return members;
         } catch (err) {
             throw err;
